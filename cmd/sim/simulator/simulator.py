@@ -5,13 +5,33 @@ import uuid
 import threading
 import requests
 from io import BytesIO
-from sim.constants import STRIKER_WHO_AM_I, SIMULATION_URL
-from sim.simulator import TableRules
-from .simulation import SimulationParameters, SimulationReport, SimulationDatabaseTable
+from sim.arguments import Parameters, Report
+from sim.constants import STRIKER_WHO_AM_I, SIMULATION_URL, DATABASE_NUMBER_OF_HANDS
+from sim.table import Rules
 from .table import Table
 from .player import Player
 
-class SimulationManager:
+# Initialize a DatabaseTable for storing results.
+class DatabaseTable:
+    def __init__(self, playbook, guid, simulator, simulations, rounds, hands, total_bet, total_won, total_time, average_time, advantage, timestamp, parameters, rules, payload):
+        self.playbook = playbook
+        self.guid = guid
+        self.simulator = simulator
+        self.simulations = simulations
+        self.rounds = rounds
+        self.hands = hands
+        self.total_bet = total_bet
+        self.total_won = total_won
+        self.total_time = total_time
+        self.average_time = average_time
+        self.advantage = advantage
+        self.summary = "no"
+        self.timestamp = timestamp
+        self.parameters = parameters
+        self.rules = rules
+        self.payload = payload
+
+class Simulator:
     # Initialize a Simulation object with the provided parameters.
     def __init__(self, parameters):
         current_time = time.time()
@@ -25,29 +45,30 @@ class SimulationManager:
         self.table_list = []
 
         # Initialize tables and players
-        for table_number in range(1, parameters.tables + 1):
-            table = Table(table_number, parameters)
-            player = Player(parameters, table.shoe.number_of_cards)
-            table.add_player(player)
-            self.table_list.append(table)
+        table = Table(1, parameters)
+        player = Player(parameters, table.shoe.number_of_cards)
+        table.add_player(player)
+        self.table_list.append(table)
 
-        self.report = SimulationReport()
+        self.report = Report()
 
     # Run the simulation by starting sessions for all tables.
     def run_simulation(self):
-        print(f"Simulation {self.name}: started at {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}")
         threads = []
         for table in self.table_list:
-            if self.parameters.strategy == "mimic":
-                thread = threading.Thread(target=table.session_mimic)
-            else:
-                thread = threading.Thread(target=table.session)
-            threads.append(thread)
-            thread.start()
+            self.parameters.logger.simulation("    Start: " + self.parameters.strategy + " table session\n");
+            table.session(self.parameters.strategy == "mimic")
+            self.parameters.logger.simulation("    End: table session\n");
+            #if self.parameters.strategy == "mimic":
+                #thread = threading.Thread(target=table.session_mimic)
+            #else:
+                #thread = threading.Thread(target=table.session)
+            #threads.append(thread)
+            #thread.start()
 
         # Wait for all threads to finish
-        for thread in threads:
-            thread.join()
+        #for thread in threads:
+            #thread.join()
 
         # Merge the results from all tables into one report
         for table in self.table_list:
@@ -57,23 +78,15 @@ class SimulationManager:
             self.report.total_won += table.player.report.total_won
             self.report.duration += table.report.duration
 
-        print(f"Simulation {self.name}: end at {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}")
-
-    # Run the simulation once and process the results.
-    def run_once(self):
-        print("Starting striker-python simulation...")
-        try:
-            self.run_simulation_process()
-        except Exception as e:
-            print(f"Simulation failed: {e}")
-
     # Process the simulation and prepare a database entry for the results.
     def run_simulation_process(self):
+        self.parameters.logger.simulation(f"  Start: simulation {self.parameters.name}\n");
         self.run_simulation()
+        self.parameters.logger.simulation(f"  End: simulation\n");
 
-        tbs = SimulationDatabaseTable(
+        tbs = DatabaseTable(
             playbook=self.parameters.playbook,
-            guid=self.parameters.guid,
+            guid=self.parameters.name,
             simulator=STRIKER_WHO_AM_I,
             simulations="1",
             rounds=str(self.report.total_rounds),
@@ -81,28 +94,38 @@ class SimulationManager:
             total_bet=str(self.report.total_bet),
             total_won=str(self.report.total_won),
             total_time=str(int(self.report.duration)),
-            average_time=f"{(self.report.duration / self.report.total_hands) * 1e6:.2f} seconds per 1,000,000 hands",
+            average_time=f"{(self.report.duration / self.report.total_hands) * 1e6:.2f}",
             advantage=f"{(self.report.total_won / self.report.total_bet) * 100:+04.3f} %",
-            epoch = self.parameters.epoch,
             timestamp = self.parameters.timestamp,
-            parameters = json.dumps(self.parameters.__dict__),
-            rules = json.dumps(TableRules.__dict__),
-            payload = json.dumps(self.report.__dict__)
+            parameters = "",#json.dumps(self.parameters.__dict__),
+            rules = "",#json.dumps(Rules.__dict__),
+            payload = ""#json.dumps(self.report.__dict__)
         )
 
-        # Insert the simulation into the database
-        self.print_simulation_table(tbs)
-        self.insert_simulation_table(tbs)
+        self.print_simulation_report(tbs)
 
-    def print_simulation_table(self, simulation_table):
-        print()
-        print(f"%-12s" % ("Report"))
-        print(f"%s" % (json.dumps(simulation_table.__dict__, indent=4)))
-        print()
+        # Check if total hands exceed the threshold
+        if self.report.total_hands >= DATABASE_NUMBER_OF_HANDS:
+            self.insert_simulation_table(tbs)
+
+    def print_simulation_report(self, tbs):
+        # Print out the results
+        self.parameters.logger.simulation("\n  -- results ---------------------------------------------------------------------\n")
+        self.parameters.logger.simulation(f"    {'Number of hands':<24}: {self.report.total_hands:,}\n")
+        self.parameters.logger.simulation(f"    {'Number of rounds':<24}: {self.report.total_rounds:,}\n")
+        average_bet_per_hand = self.report.total_bet / self.report.total_hands
+        self.parameters.logger.simulation(f"    {'Total bet':<24}: {self.report.total_bet:,} {average_bet_per_hand:+04.3f} average bet per hand\n")
+        average_won_per_hand = self.report.total_won / self.report.total_hands
+        self.parameters.logger.simulation(f"    {'Total won':<24}: {self.report.total_won:,} {average_won_per_hand:+04.3f} average won per hand\n")
+        self.parameters.logger.simulation(f"    {'Total time':<24}: {self.report.duration:,} seconds\n")
+        self.parameters.logger.simulation(f"    {'Average time':<24}: {tbs.average_time} seconds per 1,000,000 hands\n")
+        self.parameters.logger.simulation(f"    {'Player advantage':<24}: {tbs.advantage}\n")
+        self.parameters.logger.simulation("  --------------------------------------------------------------------------------\n\n")
 
     # Insert the simulation results into the database.
     def insert_simulation_table(self, simulation_table):
         url = f"http://{SIMULATION_URL}/{simulation_table.simulator}/{simulation_table.playbook}/{simulation_table.guid}"
+        self.parameters.logger.simulation(f"  -- insert ----------------------------------------------------------------------\n");
         print(f"Inserting Simulation: {url}")
 
         try:
@@ -120,4 +143,6 @@ class SimulationManager:
 
         except Exception as e:
             print(f"Error sending request: {e}")
+
+        self.parameters.logger.simulation("  --------------------------------------------------------------------------------\n\n")
 

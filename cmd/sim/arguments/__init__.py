@@ -1,6 +1,6 @@
-from .strategy import CLStrategy, parse_arguments_strategy, parse_args_strategy
-from .table import CLTable, parse_arguments_table, parse_args_table
-from .simulation import CLSimulation, parse_arguments_simulation, parse_args_simulation
+from .arguments import Arguments
+from .parameters import Parameters
+from .report import Report
 
-__all__ = ['CLStrategy', 'CLTable', 'CLSimulation', 'parse_arguments_simulation', 'parse_arguments_strategy', 'parse_arguments_table', 'parse_args_simulation', 'parse_args_strategy', 'parse_args_table']
+__all__ = ['Arguments', 'Parameters', 'Report']
 
