@@ -105,7 +105,7 @@ class Simulator:
         self.print_simulation_report(tbs)
 
         # Check if total hands exceed the threshold
-        if self.report.total_hands >= DATABASE_NUMBER_OF_HANDS:
+        if self.report.total_hands >= DATABASE_NUMBER_OF_HANDS // 10:
             self.insert_simulation_table(tbs)
 
     def print_simulation_report(self, tbs):

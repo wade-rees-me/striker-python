@@ -41,8 +41,8 @@ class Player:
                 self.draw(shoe.draw())
             return
 
-        #have_cards = self.get_have(self.wager.hand)
-        if self.parameters.rules.surrender and self.strategy.get_surrender(self.seen_cards, self.get_have(self.wager.hand)):
+        self.strategy.do_play(self.seen_cards, self.get_have(self.wager.hand), self.wager.hand.cards[0] if self.wager.hand.pair() else None, up)
+        if self.parameters.rules.surrender and self.strategy.get_surrender(self.seen_cards, self.get_have(self.wager.hand), up):
             self.wager.hand.surrender = True
             return
 
