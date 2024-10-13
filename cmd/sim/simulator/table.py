@@ -1,4 +1,3 @@
-import threading
 import time
 from sim.cards import Card
 from sim.cards import Dealer

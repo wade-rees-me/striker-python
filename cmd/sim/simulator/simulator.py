@@ -2,7 +2,6 @@ import json
 import time
 from datetime import datetime, timezone
 import uuid
-import threading
 import requests
 from io import BytesIO
 from sim.arguments import Parameters, Report
@@ -54,21 +53,10 @@ class Simulator:
 
     # Run the simulation by starting sessions for all tables.
     def run_simulation(self):
-        threads = []
         for table in self.table_list:
             self.parameters.logger.simulation("    Start: " + self.parameters.strategy + " table session\n");
             table.session(self.parameters.strategy == "mimic")
             self.parameters.logger.simulation("    End: table session\n");
-            #if self.parameters.strategy == "mimic":
-                #thread = threading.Thread(target=table.session_mimic)
-            #else:
-                #thread = threading.Thread(target=table.session)
-            #threads.append(thread)
-            #thread.start()
-
-        # Wait for all threads to finish
-        #for thread in threads:
-            #thread.join()
 
         # Merge the results from all tables into one report
         for table in self.table_list:
@@ -94,12 +82,13 @@ class Simulator:
             total_bet=str(self.report.total_bet),
             total_won=str(self.report.total_won),
             total_time=str(int(self.report.duration)),
-            average_time=f"{(self.report.duration / self.report.total_hands) * 1e6:.2f}",
+            average_time=f"{(self.report.duration / self.report.total_hands) * 1e6:.2f} seconds",
             advantage=f"{(self.report.total_won / self.report.total_bet) * 100:+04.3f} %",
             timestamp = self.parameters.timestamp,
-            parameters = "",#json.dumps(self.parameters.__dict__),
+            #parameters = "n/a",#json.dumps(self.parameters.__dict__),
+            parameters = self.parameters.serialize(),
             rules = "",#json.dumps(Rules.__dict__),
-            payload = ""#json.dumps(self.report.__dict__)
+            payload = "n/a"#json.dumps(self.report.__dict__)
         )
 
         self.print_simulation_report(tbs)
