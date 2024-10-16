@@ -3,7 +3,6 @@ import sys
 import uuid
 import time
 from sim.arguments import Arguments, Parameters
-from sim.logger import Logger
 from sim.table import Rules
 from sim.constants import STRATEGY_URL, STRATEGY_MLB_URL, STRIKER_WHO_AM_I, TIME_LAYOUT
 from sim.simulator import Simulator
@@ -19,21 +18,20 @@ def main():
     args = Arguments()
     args.parse_arguments(sys.argv)
 
-    logger = Logger(name, args.number_of_hands < 1000)
     rules = Rules()
     rules.rules_load_table(args.get_decks())
 
-    params = Parameters(name, args.get_decks(), args.get_strategy(), args.get_number_of_decks(), args.number_of_hands, rules, logger)
+    params = Parameters(name, args.get_decks(), args.get_strategy(), args.get_number_of_decks(), args.number_of_hands, rules)
 
-    logger.simulation(f"Start: {STRIKER_WHO_AM_I}\n\n");
-    logger.simulation(f"  -- arguments -------------------------------------------------------------------\n");
+    print(f"Start: {STRIKER_WHO_AM_I}\n");
+    print(f"  -- arguments -------------------------------------------------------------------");
     params.print()
-    rules.print(logger)
-    logger.simulation(f"  --------------------------------------------------------------------------------\n\n");
+    rules.print()
+    print(f"  --------------------------------------------------------------------------------\n");
 
     sim_manager = Simulator(params)
     sim_manager.run_simulation_process()
-    logger.simulation(f"End: {STRIKER_WHO_AM_I}\n\n");
+    print(f"End: {STRIKER_WHO_AM_I}\n");
 
 if __name__ == "__main__":
     main()

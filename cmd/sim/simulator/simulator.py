@@ -54,9 +54,9 @@ class Simulator:
     # Run the simulation by starting sessions for all tables.
     def run_simulation(self):
         for table in self.table_list:
-            self.parameters.logger.simulation("    Start: " + self.parameters.strategy + " table session\n");
+            print("    Start: " + self.parameters.strategy + " table session");
             table.session(self.parameters.strategy == "mimic")
-            self.parameters.logger.simulation("    End: table session\n");
+            print("    End: table session");
 
         # Merge the results from all tables into one report
         for table in self.table_list:
@@ -68,9 +68,9 @@ class Simulator:
 
     # Process the simulation and prepare a database entry for the results.
     def run_simulation_process(self):
-        self.parameters.logger.simulation(f"  Start: simulation {self.parameters.name}\n");
+        print(f"  Start: simulation {self.parameters.name}");
         self.run_simulation()
-        self.parameters.logger.simulation(f"  End: simulation\n");
+        print(f"  End: simulation");
 
         tbs = DatabaseTable(
             playbook=self.parameters.playbook,
@@ -99,22 +99,22 @@ class Simulator:
 
     def print_simulation_report(self, tbs):
         # Print out the results
-        self.parameters.logger.simulation("\n  -- results ---------------------------------------------------------------------\n")
-        self.parameters.logger.simulation(f"    {'Number of hands':<24}: {self.report.total_hands:,}\n")
-        self.parameters.logger.simulation(f"    {'Number of rounds':<24}: {self.report.total_rounds:,}\n")
+        print("\n  -- results ---------------------------------------------------------------------")
+        print(f"    {'Number of hands':<24}: {self.report.total_hands:,}")
+        print(f"    {'Number of rounds':<24}: {self.report.total_rounds:,}")
         average_bet_per_hand = self.report.total_bet / self.report.total_hands
-        self.parameters.logger.simulation(f"    {'Total bet':<24}: {self.report.total_bet:,} {average_bet_per_hand:+04.3f} average bet per hand\n")
+        print(f"    {'Total bet':<24}: {self.report.total_bet:,} {average_bet_per_hand:+04.3f} average bet per hand")
         average_won_per_hand = self.report.total_won / self.report.total_hands
-        self.parameters.logger.simulation(f"    {'Total won':<24}: {self.report.total_won:,} {average_won_per_hand:+04.3f} average won per hand\n")
-        self.parameters.logger.simulation(f"    {'Total time':<24}: {self.report.duration:,} seconds\n")
-        self.parameters.logger.simulation(f"    {'Average time':<24}: {tbs.average_time} seconds per 1,000,000 hands\n")
-        self.parameters.logger.simulation(f"    {'Player advantage':<24}: {tbs.advantage}\n")
-        self.parameters.logger.simulation("  --------------------------------------------------------------------------------\n\n")
+        print(f"    {'Total won':<24}: {self.report.total_won:,} {average_won_per_hand:+04.3f} average won per hand")
+        print(f"    {'Total time':<24}: {self.report.duration:,} seconds")
+        print(f"    {'Average time':<24}: {tbs.average_time} seconds per 1,000,000 hands")
+        print(f"    {'Player advantage':<24}: {tbs.advantage}")
+        print("  --------------------------------------------------------------------------------\n")
 
     # Insert the simulation results into the database.
     def insert_simulation_table(self, simulation_table):
         url = f"http://{SIMULATION_URL}/{simulation_table.simulator}/{simulation_table.playbook}/{simulation_table.guid}"
-        self.parameters.logger.simulation(f"  -- insert ----------------------------------------------------------------------\n");
+        print(f"  -- insert ----------------------------------------------------------------------");
         print(f"Inserting Simulation: {url}")
 
         try:
@@ -133,5 +133,5 @@ class Simulator:
         except Exception as e:
             print(f"Error sending request: {e}")
 
-        self.parameters.logger.simulation("  --------------------------------------------------------------------------------\n\n")
+        print("  --------------------------------------------------------------------------------\n")
 

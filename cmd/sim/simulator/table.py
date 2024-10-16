@@ -23,7 +23,7 @@ class Table:
         self.player = player
 
     def session(self, mimic):
-        self.parameters.logger.simulation(f"      Start: table, playing {self.parameters.number_of_hands:,} hands\n");
+        print(f"      Start: table, playing {self.parameters.number_of_hands:,} hands");
         self.report.start = time.time()
         while self.report.total_hands < self.parameters.number_of_hands:
             self.status(self.report.total_rounds, self.report.total_hands)
@@ -49,7 +49,7 @@ class Table:
 
         self.report.end = time.time()
         self.report.duration = round(self.report.end - self.report.start)
-        self.parameters.logger.simulation(f"\n      End: table\n")
+        print(f"\n      End: table")
 
     def deal_cards(self) -> Card:
         self.player.draw(self.shoe.draw())
@@ -66,14 +66,14 @@ class Table:
 
     def status(self, round, hand):
         if round == 0:
-            self.parameters.logger.simulation("        ")
+            print("        ", end="", flush=True)
 
         if (round + 1) % STATUS_DOT == 0:
-            self.parameters.logger.simulation(".")
+            print(".", end="", flush=True)
 
         if (round + 1) % STATUS_LINE == 0:
             #round_str = round + 1
             #hand_str = hand
-            self.parameters.logger.simulation(f" : {round + 1:,} (rounds), {hand:,} (hands)\n")
-            self.parameters.logger.simulation("        ")
+            print(f" : {round + 1:,} (rounds), {hand:,} (hands)")
+            print("        ", end="", flush=True)
 

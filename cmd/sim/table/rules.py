@@ -52,16 +52,16 @@ class Rules:
         except json.JSONDecodeError:
             raise RuntimeError("Error parsing JSON response")
 
-    def print(self, logger):
-        logger.simulation(f"    {'Table Rules':<24}\n")
-        logger.simulation(f"      {'Table':<24}: {self.playbook}\n")
-        logger.simulation(f"      {'Hit soft 17':<24}: {'true' if self.hit_soft_17 else 'false'}\n")
-        logger.simulation(f"      {'Surrender':<24}: {'true' if self.surrender else 'false'}\n")
-        logger.simulation(f"      {'Double any two cards':<24}: {'true' if self.double_any_two_cards else 'false'}\n")
-        logger.simulation(f"      {'Double after split':<24}: {'true' if self.double_after_split else 'false'}\n")
-        logger.simulation(f"      {'Resplit aces':<24}: {'true' if self.resplit_aces else 'false'}\n")
-        logger.simulation(f"      {'Hit split aces':<24}: {'true' if self.hit_split_aces else 'false'}\n")
-        logger.simulation(f"      {'Blackjack bets':<24}: {self.blackjack_bets}\n")
-        logger.simulation(f"      {'Blackjack pays':<24}: {self.blackjack_pays}\n")
-        logger.simulation(f"      {'Penetration':<24}: {self.penetration:.3f} %\n")
+    def print(self):
+        print(f"    {'Table Rules':<24}")
+        print(f"      {'Table':<24}: {self.playbook}")
+        print(f"      {'Hit soft 17':<24}: {'true' if self.hit_soft_17 else 'false'}")
+        print(f"      {'Surrender':<24}: {'true' if self.surrender else 'false'}")
+        print(f"      {'Double any two cards':<24}: {'true' if self.double_any_two_cards else 'false'}")
+        print(f"      {'Double after split':<24}: {'true' if self.double_after_split else 'false'}")
+        print(f"      {'Resplit aces':<24}: {'true' if self.resplit_aces else 'false'}")
+        print(f"      {'Hit split aces':<24}: {'true' if self.hit_split_aces else 'false'}")
+        print(f"      {'Blackjack bets':<24}: {self.blackjack_bets}")
+        print(f"      {'Blackjack pays':<24}: {self.blackjack_pays}")
+        print(f"      {'Penetration':<24}: {self.penetration:.3f} %")
 
