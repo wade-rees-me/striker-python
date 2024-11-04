@@ -36,15 +36,8 @@ class Shoe:
         self.shuffle_random()
 
     def shuffle_random(self):
-        for i in range(self.last_discard - 1, 0, -1):
-            j = random.randint(0, i)  # Random index from 0 to i
-            # Swap cards[i] and cards[j]
-            self.cards[i], self.cards[j] = self.cards[j], self.cards[i]
-        self.next_card = 1  # Start drawing from the second card (burn the first)
-
-#    def shuffle_random(self):
-#        random.shuffle(self.cards)
-#        self.next_card = self.burn_card
+        random.shuffle(self.cards)
+        self.next_card = self.burn_card
 
     def draw(self):
         if self.next_card >= self.number_of_cards:
