@@ -32,7 +32,7 @@ class DatabaseTable:
 
 class Simulator:
     # Initialize a Simulation object with the provided parameters.
-    def __init__(self, parameters):
+    def __init__(self, parameters, rules, strategy):
         current_time = time.time()
         local_time = time.localtime(current_time)
         self.year = local_time.tm_year
@@ -41,11 +41,12 @@ class Simulator:
         self.name = f"striker-python_{self.year:4d}_{self.month:02d}_{self.day:02d}_{int(current_time)}"
         self.guid = str(uuid.uuid4())
         self.parameters = parameters
+        self.strategy = strategy
         self.table_list = []
 
         # Initialize tables and players
-        table = Table(1, parameters)
-        player = Player(parameters, table.shoe.number_of_cards)
+        table = Table(1, parameters, rules)
+        player = Player(parameters, rules, strategy, table.shoe.number_of_cards)
         table.add_player(player)
         self.table_list.append(table)
 
@@ -94,7 +95,7 @@ class Simulator:
         self.print_simulation_report(tbs)
 
         # Check if total hands exceed the threshold
-        if self.report.total_hands >= DATABASE_NUMBER_OF_HANDS // 10:
+        if self.report.total_hands >= DATABASE_NUMBER_OF_HANDS:
             self.insert_simulation_table(tbs)
 
     def print_simulation_report(self, tbs):

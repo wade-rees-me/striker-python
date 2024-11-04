@@ -4,7 +4,7 @@ from sim.constants import RULES_URL
 
 #
 class Rules:
-    def __init__(self):
+    def __init__(self, decks):
         self.playbook = ""
         self.hit_soft_17 = True
         self.surrender = False
@@ -16,7 +16,6 @@ class Rules:
         self.blackjack_bets = 3
         self.penetration = 0.70
 
-    def rules_load_table(self, decks):
         try:
             url = f"http://{RULES_URL}/{decks}"
             self.rules_fetch_table(url)

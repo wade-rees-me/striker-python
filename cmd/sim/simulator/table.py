@@ -2,7 +2,6 @@ import time
 from sim.cards import Card
 from sim.cards import Dealer
 from sim.cards import Shoe
-from sim.cards import deck_of_poker_cards
 from sim.table import Rules
 from sim.arguments import Parameters, Report
 from .player import Player
@@ -11,13 +10,15 @@ STATUS_DOT = 25000;
 STATUS_LINE = 1000000;
 
 class Table:
-    def __init__(self, index, parameters: Parameters):
+    def __init__(self, index, parameters: Parameters, rules: Rules):
         self.index = index
         self.parameters = parameters
-        self.dealer = Dealer(parameters.rules.hit_soft_17)
-        self.shoe = Shoe(deck_of_poker_cards, parameters.number_of_decks, parameters.rules.penetration)  # Create a new shoe object
+        self.dealer = Dealer(rules.hit_soft_17)
+        self.shoe = Shoe(parameters.number_of_decks, rules.penetration)  # Create a new shoe object
         self.report = Report()
         self.player = None
+        self.up_card = None
+        self.down_card = None
 
     def add_player(self, player: Player):
         self.player = player
@@ -34,35 +35,40 @@ class Table:
                 self.report.total_hands += 1
                 self.dealer.reset()
                 self.player.place_bet(mimic)
-                up_card = self.deal_cards()
+                self.deal_cards()
 
-                if not mimic and up_card.is_blackjack_ace():
+                if not mimic and self.up_card.is_blackjack_ace():
                     self.player.insurance()
 
                 if not self.dealer.hand.blackjack():  # Dealer does not have 21
-                    self.player.play(mimic, self.shoe, up_card)
+                    self.player.play(mimic, self.shoe, self.up_card)
                     if not self.player.busted_or_blackjack():  # Dealer plays if player hasn't busted or blackjack
-                        self.dealer.play(self.shoe)
+                        while not self.dealer.stand():
+                            card = self.shoe.draw();
+                            self.dealer.draw(card);
+                            self.player.show(card);
                 
+                self.player.show(self.down_card)
                 self.player.payoff(self.dealer.hand.blackjack(), self.dealer.hand.busted(), self.dealer.hand.total())
-                self.show(up_card)
 
         self.report.end = time.time()
         self.report.duration = round(self.report.end - self.report.start)
         print(f"\n      End: table")
 
-    def deal_cards(self) -> Card:
-        self.player.draw(self.shoe.draw())
-        up_card = self.dealer.draw(self.shoe.draw())
-        self.player.show(up_card)
-        self.player.draw(self.shoe.draw())
-        self.dealer.draw(self.shoe.draw())
-        return up_card
+    def deal_cards(self):
+        self.player.draw(self.player.wager.hand, self.shoe)
+        self.up_card = self.shoe.draw()
+        self.dealer.draw(self.up_card)
+        self.player.show(self.up_card)
 
-    def show(self, up_card: Card):
-        for card in self.dealer.hand.cards:
-            if up_card.index != card.index:
-                self.player.show(card)
+        self.player.draw(self.player.wager.hand, self.shoe)
+        self.down_card = self.shoe.draw()
+        self.dealer.draw(self.down_card)
+
+#    def show(self, card: Card):
+#        for card in self.dealer.hand.cards:
+#            if card.index != card.index:
+#                self.player.show(card)
 
     def status(self, round, hand):
         if round == 0:

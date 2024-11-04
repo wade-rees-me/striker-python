@@ -1,16 +1,17 @@
-from sim.cards import Wager, Shoe, Hand, Card, MINIMUM_BET
-from sim.constants import MAX_SPLIT_HANDS
-from sim.table import Rules
+#from sim.cards import Wager, Shoe, Hand, Card, MINIMUM_BET
+from sim.cards import Wager, Shoe, Hand, Card
+from sim.constants import MAX_SPLIT_HANDS, MINIMUM_BET, MAXIMUM_BET
+from sim.table import Rules, Strategy
 from sim.arguments import Parameters, Report
-from .strategy import Strategy
 
 class Player:
-    def __init__(self, parameters, number_of_cards):
-        self.strategy = Strategy(parameters.playbook, number_of_cards)
-        self.wager = Wager()
-        self.splits = [Wager() for _ in range(MAX_SPLIT_HANDS)]
+    def __init__(self, parameters, rules, strategy, number_of_cards):
+        self.wager = Wager(MINIMUM_BET, MAXIMUM_BET)
+        self.splits = [Wager(MINIMUM_BET, MAXIMUM_BET) for _ in range(MAX_SPLIT_HANDS)]
         self.split_count = 0
         self.parameters = parameters
+        self.rules = rules
+        self.strategy = strategy
         self.report = Report()
         self.number_of_cards = number_of_cards
         self.seen_cards = [0] * 13
@@ -41,66 +42,55 @@ class Player:
                 self.draw(shoe.draw())
             return
 
-        self.strategy.do_play(self.seen_cards, self.get_have(self.wager.hand), self.wager.hand.cards[0] if self.wager.hand.pair() else None, up)
-        if self.parameters.rules.surrender and self.strategy.get_surrender(self.seen_cards, self.get_have(self.wager.hand), up):
-            self.wager.hand.surrender = True
-            return
-
-        if (self.parameters.rules.double_any_two_cards or self.wager.hand.total() in {10, 11}) and self.strategy.get_double(self.seen_cards, self.get_have(self.wager.hand), up):
+        if self.strategy.get_double(self.seen_cards, self.wager.hand.total(), self.wager.hand.soft(), up):
             self.wager.double()
-            self.wager.hand.draw(shoe.draw())
+            self.draw(self.wager.hand, shoe)
             return
 
         if self.wager.hand.pair() and self.strategy.get_split(self.seen_cards, self.wager.hand.cards[0], up):
             split = self.splits[self.split_count]
             self.split_count += 1
             if self.wager.hand.pair_of_aces():
-                if not self.parameters.rules.resplit_aces and not self.parameters.rules.hit_split_aces:
-                    self.wager.split_wager(split)
-                    self.wager.hand.draw(shoe.draw())
-                    split.hand.draw(shoe.draw())
-                    return
+                self.wager.split_wager(split)
+                self.draw(self.wager.hand, shoe)
+                self.draw(split.hand, shoe)
+                return
             self.wager.split_wager(split)
-            self.wager.hand.draw(shoe.draw())
+            self.draw(self.wager.hand, shoe)
             self.play_split(self.wager, shoe, up)
-            split.hand.draw(shoe.draw())
+            self.draw(split.hand, shoe)
             self.play_split(split, shoe, up)
             return
 
-        while not self.wager.hand.busted() and not self.strategy.get_stand(self.seen_cards, self.get_have(self.wager.hand), up):
-            self.wager.hand.draw(shoe.draw())
-            #have_cards = self.get_have(self.wager.hand)
+        do_stand = self.strategy.get_stand(self.seen_cards, self.wager.hand.total(), self.wager.hand.soft(), up)
+        while not self.wager.hand.busted() and not do_stand:
+            self.draw(self.wager.hand, shoe)
+            if not self.wager.hand.busted():
+                do_stand = self.strategy.get_stand(self.seen_cards, self.wager.hand.total(), self.wager.hand.soft(), up)
 
     def play_split(self, wager: Wager, shoe: Shoe, up: Card):
-        have_cards = self.get_have(wager.hand)
-        if self.parameters.rules.double_after_split and self.strategy.get_double(self.seen_cards, have_cards, up):
-            wager.double()
-            wager.hand.draw(shoe.draw())
-            return
-
         if wager.hand.pair() and self.split_count < MAX_SPLIT_HANDS:
             if self.strategy.get_split(self.seen_cards, wager.hand.cards[0], up):
-                if not wager.hand.pair_of_aces() or \
-                   (wager.hand.pair_of_aces() and self.parameters.rules.resplit_aces):
-                    split = self.splits[self.split_count]
-                    self.split_count += 1
-                    wager.split_wager(split)
-                    wager.hand.draw(shoe.draw())
-                    self.play_split(wager, shoe, up)
-                    split.hand.draw(shoe.draw())
-                    self.play_split(split, shoe, up)
-                    return
+                split = self.splits[self.split_count]
+                self.split_count += 1
+                wager.split_wager(split)
+                self.draw(wager.hand, shoe)
+                self.play_split(wager, shoe, up)
+                self.draw(split.hand, shoe)
+                self.play_split(split, shoe, up)
+                return
 
-        if wager.hand.cards[0].is_blackjack_ace() and not self.parameters.rules.hit_split_aces:
-            return
+        do_stand = self.strategy.get_stand(self.seen_cards, wager.hand.total(), wager.hand.soft(), up)
+        while not wager.hand.busted() and not do_stand:
+            self.draw(wager.hand, shoe)
+            if not wager.hand.busted():
+                do_stand = self.strategy.get_stand(self.seen_cards, wager.hand.total(), wager.hand.soft(), up)
 
-        while not wager.hand.busted() and not self.strategy.get_stand(self.seen_cards, have_cards, up):
-            wager.hand.draw(shoe.draw())
-            have_cards = self.get_have(wager.hand)
-
-    def draw(self, card: Card) -> Card:
+    def draw(self, hand: Hand, shoe: Shoe) -> Card:
+        card = shoe.draw()
         self.show(card)
-        return self.wager.hand.draw(card)
+        hand.draw(card)
+        return card
 
     def show(self, card: Card):
         self.seen_cards[card.get_offset()] += 1
@@ -128,25 +118,22 @@ class Player:
         else:
             wager.lost_insurance()
 
-        if wager.hand.surrender:
-            self.report.total_won -= wager.amount_bet // 2
-        else:
-            #print(f"player:{wager.hand.total()}, dealer:{dealer_total}")
-            if dealer_blackjack:
-                if wager.hand.blackjack():
-                    wager.push()
-                else:
-                    wager.lost()
-            elif wager.hand.blackjack():
-                wager.won_blackjack(self.parameters.rules.blackjack_pays, self.parameters.rules.blackjack_bets)
-            elif wager.hand.busted():
-                wager.lost()
-            elif dealer_busted or wager.hand.total() > dealer_total:
-                wager.won()
-            elif dealer_total > wager.hand.total():
-                wager.lost()
-            else:
+        #print(f"player:{wager.hand.total()}, dealer:{dealer_total}")
+        if dealer_blackjack:
+            if wager.hand.blackjack():
                 wager.push()
+            else:
+                wager.lost()
+        elif wager.hand.blackjack():
+            wager.won_blackjack(self.rules.blackjack_pays, self.rules.blackjack_bets)
+        elif wager.hand.busted():
+            wager.lost()
+        elif dealer_busted or wager.hand.total() > dealer_total:
+            wager.won()
+        elif dealer_total > wager.hand.total():
+            wager.lost()
+        else:
+            wager.push()
 
         self.report.total_won += wager.amount_won
         self.report.total_bet += wager.amount_bet + wager.insurance_bet
@@ -163,12 +150,6 @@ class Player:
 
         self.report.total_won += wager.amount_won
         self.report.total_bet += wager.amount_bet
-
-    def get_have(self, hand: Hand) -> list:
-        have_cards = [0] * 13
-        for card in hand.cards:
-            have_cards[card.get_offset()] += 1
-        return have_cards
 
     def mimic_stand(self):
         if self.wager.hand.soft_17():

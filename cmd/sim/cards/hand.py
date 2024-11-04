@@ -5,12 +5,10 @@ class Hand:
         :attribute cards: List of Card objects in the hand.
         :attribute hand_total: Total value of the hand.
         :attribute soft_ace: Number of aces valued as 11.
-        :attribute surrender: Whether the player has surrendered.
         """
         self.cards = []
         self.hand_total = 0
         self.soft_ace = 0
-        self.surrender = False
 
     def reset(self):
         """
@@ -19,7 +17,6 @@ class Hand:
         self.cards = []
         self.hand_total = 0
         self.soft_ace = 0
-        self.surrender = False
 
     def draw(self, card):
         """

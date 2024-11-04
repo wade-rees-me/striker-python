@@ -1,11 +1,10 @@
 from .hand import Hand
 
-MINIMUM_BET = 2
-MAXIMUM_BET = 98
-
 class Wager:
-    def __init__(self):
+    def __init__(self, minimum_bet, maximum_bet):
         self.hand = Hand()  # Assuming Hand class is defined elsewhere
+        self.minimum_bet = minimum_bet
+        self.maximum_bet = maximum_bet
         self.amount_bet = 0
         self.amount_won = 0
         self.insurance_bet = 0
@@ -24,7 +23,7 @@ class Wager:
         self.insurance_won = 0
 
     def bet(self, bet):
-        self.amount_bet = (min(MAXIMUM_BET, max(MINIMUM_BET, bet)) + 1) // 2 * 2;
+        self.amount_bet = (min(self.maximum_bet, max(self.minimum_bet, bet)) + 1) // 2 * 2;
         #print(f"bet: {bet} = {self.amount_bet}")
 
     def double(self):

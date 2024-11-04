@@ -3,7 +3,7 @@ from sim.constants.constants import MAXIMUM_NUMBER_OF_HANDS, MINIMUM_NUMBER_OF_H
 
 #
 class Arguments:
-    def __init__(self):
+    def __init__(self, argv):
         self.mimic_flag = False
         self.basic_flag = False
         self.linear_flag = False
@@ -16,7 +16,6 @@ class Arguments:
         self.six_shoe_flag = False
         self.number_of_hands = DEFAULT_NUMBER_OF_HANDS
 
-    def parse_arguments(self, argv):
         i = 1  # Start from the first argument after the program name
         while i < len(argv):
             if argv[i] in ("-h", "--number-of-hands") and i + 1 < len(argv):
