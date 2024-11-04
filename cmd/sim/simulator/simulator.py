@@ -41,6 +41,7 @@ class Simulator:
         self.name = f"striker-python_{self.year:4d}_{self.month:02d}_{self.day:02d}_{int(current_time)}"
         self.guid = str(uuid.uuid4())
         self.parameters = parameters
+        self.rules = rules
         self.strategy = strategy
         self.table_list = []
 
@@ -86,9 +87,8 @@ class Simulator:
             average_time=f"{(self.report.duration / self.report.total_hands) * 1e6:.2f} seconds",
             advantage=f"{(self.report.total_won / self.report.total_bet) * 100:+04.3f} %",
             timestamp = self.parameters.timestamp,
-            #parameters = "n/a",#json.dumps(self.parameters.__dict__),
             parameters = self.parameters.serialize(),
-            rules = "",#json.dumps(Rules.__dict__),
+            rules = self.rules.serialize(),
             payload = "n/a"#json.dumps(self.report.__dict__)
         )
 

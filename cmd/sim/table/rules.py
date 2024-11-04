@@ -64,3 +64,17 @@ class Rules:
         print(f"      {'Blackjack pays':<24}: {self.blackjack_pays}")
         print(f"      {'Penetration':<24}: {self.penetration:.3f} %")
 
+    def serialize(self):
+        data = {
+            "hit_soft_17": str(self.hit_soft_17).lower(),
+            "surrender": str(self.surrender).lower(),
+            "double_any_two_cards": str(self.double_any_two_cards).lower(),
+            "double_after_split": str(self.double_after_split).lower(),
+            "resplit_aces": str(self.resplit_aces).lower(),
+            "hit_split_aces": str(self.hit_split_aces).lower(),
+            "blackjack_bets": self.blackjack_bets,
+            "blackjack_pays": self.blackjack_pays,
+            "penetration": self.penetration
+        }
+        return json.dumps(data, indent=4)
+
