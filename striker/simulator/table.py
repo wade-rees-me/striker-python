@@ -1,9 +1,9 @@
 import time
-from sim.cards import Card
-from sim.cards import Dealer
-from sim.cards import Shoe
-from sim.table import Rules
-from sim.arguments import Parameters, Report
+from striker.cards import Card
+from striker.cards import Dealer
+from striker.cards import Shoe
+from striker.table import Rules
+from striker.arguments import Parameters, Report
 from .player import Player
 
 STATUS_DOT = 25000;

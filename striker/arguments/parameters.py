@@ -1,6 +1,6 @@
 import time
 import json
-from sim.constants import STRIKER_WHO_AM_I, STRIKER_VERSION
+from striker.constants import STRIKER_WHO_AM_I, STRIKER_VERSION
 
 def generate_name():
     t = time.localtime()  # Get the current time

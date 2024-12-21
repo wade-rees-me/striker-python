@@ -1,7 +1,9 @@
+import http.client
 import json
-import requests
-from sim.constants import TRUE_COUNT_BET, TRUE_COUNT_MULTIPLIER
-from sim.cards import Card
+from urllib.parse import urlparse
+from striker.constants import TRUE_COUNT_BET, TRUE_COUNT_MULTIPLIER
+from striker.cards import Card
+from .chart import Chart
 
 MAX_VALUES = 13
 MAX_ENTRIES = 22
@@ -14,25 +16,45 @@ class Strategy:
         self.Counts = [0] * MAX_VALUES
         self.Bets = [0] * MAX_VALUES
         self.Insurance = ""
-        self.SoftDouble = [[" " * MAX_STRING_SIZE for _ in range(MAX_VALUES)] for _ in range(MAX_ENTRIES)]
-        self.HardDouble = [[" " * MAX_STRING_SIZE for _ in range(MAX_VALUES)] for _ in range(MAX_ENTRIES)]
-        self.PairSplit = [[" " * MAX_STRING_SIZE for _ in range(MAX_VALUES)] for _ in range(MAX_ENTRIES)]
-        self.SoftStand = [[" " * MAX_STRING_SIZE for _ in range(MAX_VALUES)] for _ in range(MAX_ENTRIES)]
-        self.HardStand = [[" " * MAX_STRING_SIZE for _ in range(MAX_VALUES)] for _ in range(MAX_ENTRIES)]
+
+        self.SoftDouble = Chart("Soft Double")
+        self.HardDouble = Chart("Hard Double")
+        self.PairSplit = Chart("Pair Split")
+        self.SoftStand = Chart("Soft Stand")
+        self.HardStand = Chart("Hard Stand")
+
         self.number_of_cards = number_of_cards
 
         if playbook.lower() != "mimic":
             self.fetch_json("http://localhost:57910/striker/v1/strategy")
             self.fetch_table(decks, playbook)
 
+            self.SoftDouble.chart_print()
+            self.HardDouble.chart_print()
+            self.PairSplit.chart_print()
+            self.SoftStand.chart_print()
+            self.HardStand.chart_print()
+
     def fetch_json(self, url):
         try:
-            response = requests.get(url)
-            response.raise_for_status()
-            self.request['jsonResponse'] = response.json()
-        except requests.RequestException as e:
+            parsed_url = urlparse(url)
+            conn = http.client.HTTPConnection(parsed_url.netloc)
+            conn.request("GET", parsed_url.path + ("?" + parsed_url.query if parsed_url.query else ""))
+            response = conn.getresponse()
+
+            if response.status < 200 or response.status >= 300:
+                raise RuntimeError(f"HTTP error: {response.status} {response.reason}")
+
+            response_data = response.read().decode("utf-8")
+            self.request['jsonResponse'] = json.loads(response_data)
+        except http.client.HTTPException as e:
             print(f"Error fetching JSON: {e}")
             exit(1)
+        except json.JSONDecodeError:
+            print("Error parsing JSON response")
+            exit(1)
+        finally:
+            conn.close()
 
     def fetch_table(self, decks, playbook):
         for item in self.request['jsonResponse']:
@@ -49,35 +71,34 @@ class Strategy:
                 self.load_table(payload.get("hard-stand"), self.HardStand)
                 break
 
-    def load_table(self, data, table):
+    def load_table(self, data, chart):
         if data is not None:
             for key, values in data.items():
-                entry = int(key)
                 for i, value in enumerate(values):
-                    table[entry][i] = value
+                    chart.chart_insert(key, i, value)
 
     def get_bet(self, seen_cards):
         return self.get_true_count(seen_cards, self.get_running_count(seen_cards)) * TRUE_COUNT_BET
 
     def get_insurance(self, seen_cards):
         true_count = self.get_true_count(seen_cards, self.get_running_count(seen_cards))
-        return self.process_value(self.Insurance, true_count, False);
+        return self.process_value(self.Insurance, true_count, False)
 
     def get_double(self, seen_cards, total, soft, up: Card):
         true_count = self.get_true_count(seen_cards, self.get_running_count(seen_cards))
         if soft:
-            return self.process_value(self.SoftDouble[total][up.offset], true_count, False);
-        return self.process_value(self.HardDouble[total][up.offset], true_count, False);
+            return self.process_value(self.SoftDouble.chart_get_value(str(total), up.offset), true_count, False)
+        return self.process_value(self.HardDouble.chart_get_value(str(total), up.offset), true_count, False)
 
     def get_split(self, seen_cards, pair: Card, up: Card):
         true_count = self.get_true_count(seen_cards, self.get_running_count(seen_cards))
-        return self.process_value(self.PairSplit[pair.value][up.offset], true_count, False);
+        return self.process_value(self.PairSplit.chart_get_value(pair.key, up.offset), true_count, False)
 
     def get_stand(self, seen_cards, total, soft, up: Card):
         true_count = self.get_true_count(seen_cards, self.get_running_count(seen_cards))
         if soft:
-            return self.process_value(self.SoftStand[total][up.offset], true_count, False);
-        return self.process_value(self.HardStand[total][up.offset], true_count, False);
+            return self.process_value(self.SoftStand.chart_get_value(str(total), up.offset), true_count, False)
+        return self.process_value(self.HardStand.chart_get_value(str(total), up.offset), true_count, False)
 
     def get_running_count(self, seen_cards):
         return sum(c * s for c, s in zip(self.Counts, seen_cards))
@@ -98,4 +119,4 @@ class Strategy:
         elif value[0].lower() == "r":
             return true_count <= int(value[1:])
         return true_count >= int(value)
-    
+
