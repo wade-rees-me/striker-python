@@ -6,6 +6,7 @@ class Arguments:
     def __init__(self, argv):
         self.mimic_flag = False
         self.basic_flag = False
+        self.neural_flag = False
         self.linear_flag = False
         self.polynomial_flag = False
         self.high_low_flag = False
@@ -28,6 +29,8 @@ class Arguments:
                 self.mimic_flag = True
             elif argv[i] in ("-B", "--basic"):
                 self.basic_flag = True
+            elif argv[i] in ("-N", "--neural"):
+                self.neural_flag = True
             elif argv[i] in ("-L", "--linear"):
                 self.linear_flag = True
             elif argv[i] in ("-P", "--polynomial"):
@@ -66,6 +69,7 @@ class Arguments:
         print("  -h, --number-of-hands <number of hands>  The number of hands to play in this simulation")
         print("  -M, --mimic                              Use the mimic dealer player strategy")
         print("  -B, --basic                              Use the basic player strategy")
+        print("  -N, --neural                             Use the neural player strategy")
         print("  -L, --linear                             Use the linear regression player strategy")
         print("  -P, --polynomial                         Use the polynomial regression player strategy")
         print("  -H, --high-low                           Use the high-low count player strategy")
@@ -82,6 +86,8 @@ class Arguments:
             return "polynomial"
         if self.linear_flag:
             return "linear"
+        if self.neural_flag:
+            return "neural"
         if self.high_low_flag:
             return "high-low"
         if self.wong_flag:
