@@ -41,15 +41,6 @@ class Parameters:
             "strategy": self.strategy,
             "number_of_hands": self.number_of_hands,
             "number_of_decks": self.number_of_decks
-            #"hit_soft_17": str(self.rules.hit_soft_17).lower(),
-            #"surrender": str(self.rules.surrender).lower(),
-            #"double_any_two_cards": str(self.rules.double_any_two_cards).lower(),
-            #"double_after_split": str(self.rules.double_after_split).lower(),
-            #"resplit_aces": str(self.rules.resplit_aces).lower(),
-            #"hit_split_aces": str(self.rules.hit_split_aces).lower(),
-            #"blackjack_bets": self.rules.blackjack_bets,
-            #"blackjack_pays": self.rules.blackjack_pays,
-            #"penetration": self.rules.penetration
         }
         return json.dumps(data, indent=4)
 

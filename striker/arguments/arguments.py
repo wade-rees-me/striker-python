@@ -11,7 +11,6 @@ class Arguments:
         self.polynomial_flag = False
         self.high_low_flag = False
         self.wong_flag = False
-        self.striker_flag = False
         self.single_deck_flag = False
         self.double_deck_flag = False
         self.six_shoe_flag = False
@@ -39,8 +38,6 @@ class Arguments:
                 self.high_low_flag = True
             elif argv[i] in ("-W", "--wong"):
                 self.wong_flag = True
-            elif argv[i] in ("-S", "--striker"):
-                self.striker_flag = True
             elif argv[i] in ("-1", "--single-deck"):
                 self.single_deck_flag = True
             elif argv[i] in ("-2", "--double-deck"):
@@ -74,7 +71,6 @@ class Arguments:
         print("  -P, --polynomial                         Use the polynomial regression player strategy")
         print("  -H, --high-low                           Use the high-low count player strategy")
         print("  -W, --wong                               Use the Wong count player strategy")
-        print("  -S, --striker                            Use the Striker machine learning player strategy")
         print("  -1, --single-deck                        Use a single deck of cards and rules")
         print("  -2, --double-deck                        Use a double deck of cards and rules")
         print("  -6, --six-shoe                           Use a six-deck shoe of cards and rules")
@@ -92,8 +88,6 @@ class Arguments:
             return "high-low"
         if self.wong_flag:
             return "wong"
-        if self.striker_flag:
-            return "striker"
         return "basic"
 
     def get_decks(self):

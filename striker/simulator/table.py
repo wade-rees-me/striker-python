@@ -65,11 +65,6 @@ class Table:
         self.down_card = self.shoe.draw()
         self.dealer.draw(self.down_card)
 
-#    def show(self, card: Card):
-#        for card in self.dealer.hand.cards:
-#            if card.index != card.index:
-#                self.player.show(card)
-
     def status(self, round, hand):
         if round == 0:
             print("        ", end="", flush=True)

@@ -36,10 +36,3 @@ class Request:
         finally:
             conn.close()
 
-## Example usage
-#if __name__ == "__main__":
-#    request = Request()
-#    url = "https://jsonplaceholder.typicode.com/posts/1"
-#    request.fetch_json(url)
-#    print(request.json_response)
-

@@ -1,7 +1,7 @@
 class ChartRow:
     def __init__(self):
         self.key = "--"
-        self.value = [["---"] * 13 for _ in range(13)]  # 2, 3, ... A
+        self.value = [["---"] * 12 for _ in range(12)]  # 2, 3, ... A
 
 
 class Chart:
@@ -16,7 +16,7 @@ class Chart:
         self.nextRow = 0
         for row in self.rows:
             row.key = "--"
-            for i in range(13):
+            for i in range(12):
                 row.value[i] = "---"
 
     def chart_get_row_count(self):
@@ -52,9 +52,9 @@ class Chart:
 
     def chart_print(self):
         print(self.name)
-        print("--------2-----3-----4-----5-----6-----7-----8-----9-----T-----J-----Q-----K-----A---")
+        print("--------------------2-----3-----4-----5-----6-----7-----8-----9-----X-----A---")
         for row in self.rows[:self.nextRow]:
             print(f"{row.key:2} :", end=" ")
-            print(" ".join(f"{value:4}" for value in row.value))
-        print("------------------------------------------------------------------------------------\n")
+            print(" ".join(f"{value.rjust(4)}," for value in row.value))
+        print("------------------------------------------------------------------------------\n")
 

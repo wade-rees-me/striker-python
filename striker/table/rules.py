@@ -91,8 +91,3 @@ class Rules:
         }
         return json.dumps(data, indent=4)
 
-## Example usage
-#if __name__ == "__main__":
-#    rules = Rules(6)
-#    rules.print()
-

@@ -97,7 +97,7 @@ class Player:
         return card
 
     def show(self, card: Card):
-        self.seen_cards[card.get_offset()] += 1
+        self.seen_cards[card.get_value()] += 1
 
     def busted_or_blackjack(self) -> bool:
         if self.split_count == 0:

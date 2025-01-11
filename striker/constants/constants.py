@@ -2,7 +2,7 @@ import os
 
 # General constants
 STRIKER_WHO_AM_I = "striker-python"
-STRIKER_VERSION = "v01.02.02"
+STRIKER_VERSION = "v02.02.00"
 TIME_LAYOUT = "%Y-%m-%d %H:%M:%S %z"  # Python uses strftime format, similar to Go's
 
 # Simulation constants

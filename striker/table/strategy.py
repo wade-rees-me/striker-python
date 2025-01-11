@@ -14,7 +14,6 @@ class Strategy:
         self.request = {}
         self.Playbook = ""
         self.Counts = [0] * MAX_VALUES
-        self.Bets = [0] * MAX_VALUES
         self.Insurance = ""
 
         self.SoftDouble = Chart("Soft Double")
@@ -34,6 +33,7 @@ class Strategy:
             self.PairSplit.chart_print()
             self.SoftStand.chart_print()
             self.HardStand.chart_print()
+            self.count_print()
 
     def fetch_json(self, url):
         try:
@@ -61,9 +61,10 @@ class Strategy:
             if item.get("playbook") == decks and item.get("hand") == playbook:
                 payload = json.loads(item.get("payload"))
                 self.Playbook = payload.get("playbook", "")
-                self.Counts = payload.get("counts", [0] * MAX_VALUES)
-                self.Bets = payload.get("bets", [0] * MAX_VALUES)
                 self.Insurance = payload.get("insurance", "")
+                self.Counts = payload.get("counts", [0] * MAX_VALUES)
+                self.Counts.insert(0, 0)
+                self.Counts.insert(0, 0)
                 self.load_table(payload.get("soft-double"), self.SoftDouble)
                 self.load_table(payload.get("hard-double"), self.HardDouble)
                 self.load_table(payload.get("pair-split"), self.PairSplit)
@@ -75,7 +76,7 @@ class Strategy:
         if data is not None:
             for key, values in data.items():
                 for i, value in enumerate(values):
-                    chart.chart_insert(key, i, value)
+                    chart.chart_insert(key, 2 + i, value)
 
     def get_bet(self, seen_cards):
         return self.get_true_count(seen_cards, self.get_running_count(seen_cards)) * TRUE_COUNT_BET
@@ -87,18 +88,18 @@ class Strategy:
     def get_double(self, seen_cards, total, soft, up: Card):
         true_count = self.get_true_count(seen_cards, self.get_running_count(seen_cards))
         if soft:
-            return self.process_value(self.SoftDouble.chart_get_value(str(total), up.offset), true_count, False)
-        return self.process_value(self.HardDouble.chart_get_value(str(total), up.offset), true_count, False)
+            return self.process_value(self.SoftDouble.chart_get_value(str(total), up.value), true_count, False)
+        return self.process_value(self.HardDouble.chart_get_value(str(total), up.value), true_count, False)
 
     def get_split(self, seen_cards, pair: Card, up: Card):
         true_count = self.get_true_count(seen_cards, self.get_running_count(seen_cards))
-        return self.process_value(self.PairSplit.chart_get_value(pair.key, up.offset), true_count, False)
+        return self.process_value(self.PairSplit.chart_get_value(pair.key, up.value), true_count, False)
 
     def get_stand(self, seen_cards, total, soft, up: Card):
         true_count = self.get_true_count(seen_cards, self.get_running_count(seen_cards))
         if soft:
-            return self.process_value(self.SoftStand.chart_get_value(str(total), up.offset), true_count, False)
-        return self.process_value(self.HardStand.chart_get_value(str(total), up.offset), true_count, False)
+            return self.process_value(self.SoftStand.chart_get_value(str(total), up.value), true_count, False)
+        return self.process_value(self.HardStand.chart_get_value(str(total), up.value), true_count, False)
 
     def get_running_count(self, seen_cards):
         return sum(c * s for c, s in zip(self.Counts, seen_cards))
@@ -119,4 +120,11 @@ class Strategy:
         elif value[0].lower() == "r":
             return true_count <= int(value[1:])
         return true_count >= int(value)
+
+    def count_print(self):
+        print("Counts")
+        print("--------------------2-----3-----4-----5-----6-----7-----8-----9-----X-----A---")
+        print(f"   :", end=" ")
+        print(" ".join(f"{count:4}," for count in self.Counts))
+        print("------------------------------------------------------------------------------\n")
 
