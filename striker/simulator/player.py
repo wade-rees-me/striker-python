@@ -1,8 +1,8 @@
-#from sim.cards import Wager, Shoe, Hand, Card, MINIMUM_BET
-from sim.cards import Wager, Shoe, Hand, Card
-from sim.constants import MAX_SPLIT_HANDS, MINIMUM_BET, MAXIMUM_BET
-from sim.table import Rules, Strategy
-from sim.arguments import Parameters, Report
+#from striker.cards import Wager, Shoe, Hand, Card, MINIMUM_BET
+from striker.cards import Wager, Shoe, Hand, Card
+from striker.constants import MAX_SPLIT_HANDS, MINIMUM_BET, MAXIMUM_BET
+from striker.table import Rules, Strategy
+from striker.arguments import Parameters, Report
 
 class Player:
     def __init__(self, parameters, rules, strategy, number_of_cards):
@@ -35,21 +35,24 @@ class Player:
 
     def play(self, mimic, shoe: Shoe, up: Card):
         if self.wager.hand.blackjack():
+            self.report.total_blackjacks += 1
             return
 
         if mimic:
             while not self.mimic_stand():
-                self.draw(shoe.draw())
+                self.draw(self.wager.hand, shoe)
             return
 
         if self.strategy.get_double(self.seen_cards, self.wager.hand.total(), self.wager.hand.soft(), up):
             self.wager.double()
             self.draw(self.wager.hand, shoe)
+            self.report.total_doubles += 1
             return
 
         if self.wager.hand.pair() and self.strategy.get_split(self.seen_cards, self.wager.hand.cards[0], up):
             split = self.splits[self.split_count]
             self.split_count += 1
+            self.report.total_splits += 1
             if self.wager.hand.pair_of_aces():
                 self.wager.split_wager(split)
                 self.draw(self.wager.hand, shoe)
@@ -73,6 +76,7 @@ class Player:
             if self.strategy.get_split(self.seen_cards, wager.hand.cards[0], up):
                 split = self.splits[self.split_count]
                 self.split_count += 1
+                self.report.total_splits += 1
                 wager.split_wager(split)
                 self.draw(wager.hand, shoe)
                 self.play_split(wager, shoe, up)
@@ -93,7 +97,7 @@ class Player:
         return card
 
     def show(self, card: Card):
-        self.seen_cards[card.get_offset()] += 1
+        self.seen_cards[card.get_value()] += 1
 
     def busted_or_blackjack(self) -> bool:
         if self.split_count == 0:
@@ -122,18 +126,24 @@ class Player:
         if dealer_blackjack:
             if wager.hand.blackjack():
                 wager.push()
+                self.report.total_pushes += 1
             else:
                 wager.lost()
+                self.report.total_loses += 1
         elif wager.hand.blackjack():
             wager.won_blackjack(self.rules.blackjack_pays, self.rules.blackjack_bets)
         elif wager.hand.busted():
             wager.lost()
+            self.report.total_loses += 1
         elif dealer_busted or wager.hand.total() > dealer_total:
             wager.won()
+            self.report.total_wins += 1
         elif dealer_total > wager.hand.total():
             wager.lost()
+            self.report.total_loses += 1
         else:
             wager.push()
+            self.report.total_pushes += 1
 
         self.report.total_won += wager.amount_won
         self.report.total_bet += wager.amount_bet + wager.insurance_bet
@@ -141,12 +151,16 @@ class Player:
     def payoff_split(self, wager: Wager, dealer_busted: bool, dealer_total: int):
         if wager.hand.busted():
             wager.lost()
+            self.report.total_loses += 1
         elif dealer_busted or wager.hand.total() > dealer_total:
             wager.won()
+            self.report.total_wins += 1
         elif dealer_total > wager.hand.total():
             wager.lost()
+            self.report.total_loses += 1
         else:
             wager.push()
+            self.report.total_pushes += 1
 
         self.report.total_won += wager.amount_won
         self.report.total_bet += wager.amount_bet

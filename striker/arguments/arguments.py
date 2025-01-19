@@ -1,16 +1,16 @@
 import sys
-from sim.constants.constants import MAXIMUM_NUMBER_OF_HANDS, MINIMUM_NUMBER_OF_HANDS, DEFAULT_NUMBER_OF_HANDS, STRIKER_WHO_AM_I, STRIKER_VERSION
+from striker.constants.constants import MAXIMUM_NUMBER_OF_HANDS, MINIMUM_NUMBER_OF_HANDS, DEFAULT_NUMBER_OF_HANDS, STRIKER_WHO_AM_I, STRIKER_VERSION
 
 #
 class Arguments:
     def __init__(self, argv):
         self.mimic_flag = False
         self.basic_flag = False
+        self.neural_flag = False
         self.linear_flag = False
         self.polynomial_flag = False
         self.high_low_flag = False
         self.wong_flag = False
-        self.striker_flag = False
         self.single_deck_flag = False
         self.double_deck_flag = False
         self.six_shoe_flag = False
@@ -28,6 +28,8 @@ class Arguments:
                 self.mimic_flag = True
             elif argv[i] in ("-B", "--basic"):
                 self.basic_flag = True
+            elif argv[i] in ("-N", "--neural"):
+                self.neural_flag = True
             elif argv[i] in ("-L", "--linear"):
                 self.linear_flag = True
             elif argv[i] in ("-P", "--polynomial"):
@@ -36,8 +38,6 @@ class Arguments:
                 self.high_low_flag = True
             elif argv[i] in ("-W", "--wong"):
                 self.wong_flag = True
-            elif argv[i] in ("-S", "--striker"):
-                self.striker_flag = True
             elif argv[i] in ("-1", "--single-deck"):
                 self.single_deck_flag = True
             elif argv[i] in ("-2", "--double-deck"):
@@ -66,11 +66,11 @@ class Arguments:
         print("  -h, --number-of-hands <number of hands>  The number of hands to play in this simulation")
         print("  -M, --mimic                              Use the mimic dealer player strategy")
         print("  -B, --basic                              Use the basic player strategy")
+        print("  -N, --neural                             Use the neural player strategy")
         print("  -L, --linear                             Use the linear regression player strategy")
         print("  -P, --polynomial                         Use the polynomial regression player strategy")
         print("  -H, --high-low                           Use the high-low count player strategy")
         print("  -W, --wong                               Use the Wong count player strategy")
-        print("  -S, --striker                            Use the Striker machine learning player strategy")
         print("  -1, --single-deck                        Use a single deck of cards and rules")
         print("  -2, --double-deck                        Use a double deck of cards and rules")
         print("  -6, --six-shoe                           Use a six-deck shoe of cards and rules")
@@ -82,12 +82,12 @@ class Arguments:
             return "polynomial"
         if self.linear_flag:
             return "linear"
+        if self.neural_flag:
+            return "neural"
         if self.high_low_flag:
             return "high-low"
         if self.wong_flag:
             return "wong"
-        if self.striker_flag:
-            return "striker"
         return "basic"
 
     def get_decks(self):

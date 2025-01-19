@@ -1,12 +1,13 @@
 import json
+import http.client
 import time
 from datetime import datetime, timezone
 import uuid
-import requests
 from io import BytesIO
-from sim.arguments import Parameters, Report
-from sim.constants import STRIKER_WHO_AM_I, SIMULATION_URL, DATABASE_NUMBER_OF_HANDS
-from sim.table import Rules
+from urllib.parse import urlparse
+from striker.arguments import Parameters, Report
+from striker.constants import STRIKER_WHO_AM_I, SIMULATION_URL, DATABASE_NUMBER_OF_HANDS
+from striker.table import Rules
 from .table import Table
 from .player import Player
 
@@ -64,6 +65,12 @@ class Simulator:
         for table in self.table_list:
             self.report.total_rounds += table.report.total_rounds
             self.report.total_hands += table.report.total_hands
+            self.report.total_blackjacks += table.player.report.total_blackjacks
+            self.report.total_doubles += table.player.report.total_doubles
+            self.report.total_splits += table.player.report.total_splits
+            self.report.total_wins += table.player.report.total_wins
+            self.report.total_pushes += table.player.report.total_pushes
+            self.report.total_loses += table.player.report.total_loses
             self.report.total_bet += table.player.report.total_bet
             self.report.total_won += table.player.report.total_won
             self.report.duration += table.report.duration
@@ -107,6 +114,20 @@ class Simulator:
         print(f"    {'Total bet':<24}: {self.report.total_bet:,} {average_bet_per_hand:+04.3f} average bet per hand")
         average_won_per_hand = self.report.total_won / self.report.total_hands
         print(f"    {'Total won':<24}: {self.report.total_won:,} {average_won_per_hand:+04.3f} average won per hand")
+
+        percent_blackjacks_per_hand = self.report.total_blackjacks / self.report.total_hands * 100.0
+        print(f"    {'Total blackjacks':<24}: {self.report.total_blackjacks:,} {percent_blackjacks_per_hand:+04.3f} percent of total hands")
+        percent_doubles_per_hand = self.report.total_doubles / self.report.total_hands * 100.0
+        print(f"    {'Total doubles':<24}: {self.report.total_doubles:,} {percent_doubles_per_hand:+04.3f} percent of total hands")
+        percent_splits_per_hand = self.report.total_splits / self.report.total_hands * 100.0
+        print(f"    {'Total splits':<24}: {self.report.total_splits:,} {percent_splits_per_hand:+04.3f} percent of total hands")
+        percent_wins_per_hand = self.report.total_wins / self.report.total_hands * 100.0
+        print(f"    {'Total wins':<24}: {self.report.total_wins:,} {percent_wins_per_hand:+04.3f} percent of total hands")
+        percent_pushes_per_hand = self.report.total_pushes / self.report.total_hands * 100.0
+        print(f"    {'Total pushes':<24}: {self.report.total_pushes:,} {percent_pushes_per_hand:+04.3f} percent of total hands")
+        percent_loses_per_hand = self.report.total_loses / self.report.total_hands * 100.0
+        print(f"    {'Total loses':<24}: {self.report.total_loses:,} {percent_loses_per_hand:+04.3f} percent of total hands")
+
         print(f"    {'Total time':<24}: {self.report.duration:,} seconds")
         print(f"    {'Average time':<24}: {tbs.average_time} seconds per 1,000,000 hands")
         print(f"    {'Player advantage':<24}: {tbs.advantage}")
@@ -122,14 +143,30 @@ class Simulator:
             # Convert the simulation table to JSON
             json_data = json.dumps(simulation_table.__dict__)
             headers = {"Content-Type": "application/json"}
-            response = requests.post(url, data=json_data, headers=headers)
+
+            # Parse the URL
+            parsed_url = urlparse(url)
+            connection = http.client.HTTPConnection(parsed_url.netloc)
+
+            # Send the POST request
+            connection.request("POST", parsed_url.path, body=json_data, headers=headers)
+
+            # Get the response
+            response = connection.getresponse()
+            response_data = response.read().decode()
+
+            print("Status:", response.status)
+            print("Response:", response_data)
+
+            # Close the connection
+            connection.close()
 
             # Handle the response
-            if response.status_code != 200:
+            if response.status != 200:
                 print(f"Error inserting into Simulation table. Status: {response.status_code}")
-                print(f"Response: {response.text}")
+                print(f"Response: {response_data}")
             else:
-                print(f"Simulation inserted successfully. Response: {response.text}")
+                print(f"Simulation inserted successfully. Response: {response_data}")
 
         except Exception as e:
             print(f"Error sending request: {e}")
