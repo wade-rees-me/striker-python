@@ -12,7 +12,7 @@ from .constants import (
     MAX_SPLIT_HANDS,
     STRIKER_WHO_AM_I,
     STRATEGY_URL,
-    STRATEGY_MLB_URL,
+    #STRATEGY_MLB_URL,
     RULES_URL,
     SIMULATION_URL
 )
@@ -31,7 +31,7 @@ __all__ = [
     "MAX_SPLIT_HANDS",
     "STRIKER_WHO_AM_I",
     "STRATEGY_URL",
-    "STRATEGY_MLB_URL",
+    #"STRATEGY_MLB_URL",
     "RULES_URL",
     "SIMULATION_URL"
 ]

@@ -24,26 +24,21 @@ class Wager:
 
     def bet(self, bet):
         self.amount_bet = (min(self.maximum_bet, max(self.minimum_bet, bet)) + 1) // 2 * 2;
-        #print(f"bet: {bet} = {self.amount_bet}")
 
     def double(self):
         self.amount_bet = self.amount_bet * 2
-        #print(f"double: {self.amount_bet}")
 
     def blackjack(self):
         return self.hand.blackjack()
 
     def won_blackjack(self, pays, bet):
         self.amount_won = (self.amount_bet * pays) // bet
-        #print(f"blackjack: {self.amount_won}")
 
     def won(self):
         self.amount_won = self.amount_bet
-        #print(f"won: {self.amount_won}")
 
     def lost(self):
         self.amount_won = -self.amount_bet
-        #print(f"lost: {self.amount_won}")
 
     def push(self):
         pass
