@@ -15,12 +15,13 @@ class Shoe:
         suits = ["spades", "diamonds", "clubs", "hearts"]
         card_names = ["two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "jack", "queen", "king", "ace"]
         card_values = [2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 11]
+        card_keys = ['2', '3', '4', '5', '6', '7', '8', '9', 'X', 'X', 'X', 'X', 'A']
 
         # Populate the shoe with cards
         for _ in range(number_of_decks):
             for suit in suits:
                 for idx, name in enumerate(card_names):
-                    self.cards.append(new_card(suit, name, card_values[idx], idx))
+                    self.cards.append(new_card(suit, name, card_keys[idx], card_values[idx]))
         
         self.number_of_cards = len(self.cards)
         self.cut_card = int(self.number_of_cards * penetration)

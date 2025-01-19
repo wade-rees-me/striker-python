@@ -1,9 +1,9 @@
 import time
-from sim.cards import Card
-from sim.cards import Dealer
-from sim.cards import Shoe
-from sim.table import Rules
-from sim.arguments import Parameters, Report
+from striker.cards import Card
+from striker.cards import Dealer
+from striker.cards import Shoe
+from striker.table import Rules
+from striker.arguments import Parameters, Report
 from .player import Player
 
 STATUS_DOT = 25000;
@@ -64,11 +64,6 @@ class Table:
         self.player.draw(self.player.wager.hand, self.shoe)
         self.down_card = self.shoe.draw()
         self.dealer.draw(self.down_card)
-
-#    def show(self, card: Card):
-#        for card in self.dealer.hand.cards:
-#            if card.index != card.index:
-#                self.player.show(card)
 
     def status(self, round, hand):
         if round == 0:

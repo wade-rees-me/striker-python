@@ -1,8 +1,8 @@
-import requests
+import http.client
 import json
-from sim.constants import RULES_URL
+from urllib.parse import urlparse
+from striker.constants import RULES_URL
 
-#
 class Rules:
     def __init__(self, decks):
         self.playbook = ""
@@ -25,12 +25,23 @@ class Rules:
 
     def rules_fetch_table(self, url):
         try:
-            # Use requests to fetch the data
-            response = requests.get(url)
-            response.raise_for_status()
+            # Parse the URL
+            parsed_url = urlparse(url)
+            conn = http.client.HTTPConnection(parsed_url.netloc)
+
+            # Make the GET request
+            conn.request("GET", parsed_url.path + ("?" + parsed_url.query if parsed_url.query else ""))
+            response = conn.getresponse()
+
+            # Check for HTTP errors
+            if response.status < 200 or response.status >= 300:
+                raise RuntimeError(f"HTTP error: {response.status} {response.reason}")
+
+            # Read the response data
+            response_data = response.read().decode("utf-8")
 
             # Parse the JSON data
-            json_data = response.json()
+            json_data = json.loads(response_data)
             payload = json_data.get("payload")
             json_payload = json.loads(payload)
 
@@ -45,11 +56,13 @@ class Rules:
             self.blackjack_bets = json_payload["blackjackBets"]
             self.blackjack_pays = json_payload["blackjackPays"]
             self.penetration = json_payload["penetration"]
-        
-        except requests.RequestException as e:
-            raise RuntimeError(f"Error fetching rules table: {e}")
+
+        except http.client.HTTPException as e:
+            raise RuntimeError(f"HTTP request failed: {e}")
         except json.JSONDecodeError:
             raise RuntimeError("Error parsing JSON response")
+        finally:
+            conn.close()
 
     def print(self):
         print(f"    {'Table Rules':<24}")

@@ -1,4 +1,4 @@
-from sim.cards import Hand
+from striker.cards import Hand
 
 class Dealer:
     def __init__(self, hit_soft_17):
