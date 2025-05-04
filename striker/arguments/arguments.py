@@ -1,5 +1,12 @@
 import sys
-from striker.constants.constants import MAXIMUM_NUMBER_OF_HANDS, MINIMUM_NUMBER_OF_HANDS, DEFAULT_NUMBER_OF_HANDS, STRIKER_WHO_AM_I, STRIKER_VERSION
+from striker.constants.constants import (
+    NUMBER_OF_HANDS_MAXIMUM,
+    NUMBER_OF_HANDS_MINIMUM,
+    NUMBER_OF_HANDS_DEFAULT,
+    STRIKER_WHO_AM_I,
+    STRIKER_VERSION,
+)
+
 
 #
 class Arguments:
@@ -14,14 +21,19 @@ class Arguments:
         self.single_deck_flag = False
         self.double_deck_flag = False
         self.six_shoe_flag = False
-        self.number_of_hands = DEFAULT_NUMBER_OF_HANDS
+        self.number_of_hands = NUMBER_OF_HANDS_DEFAULT
 
         i = 1  # Start from the first argument after the program name
         while i < len(argv):
             if argv[i] in ("-h", "--number-of-hands") and i + 1 < len(argv):
                 self.number_of_hands = int(argv[i + 1])
-                if self.number_of_hands < MINIMUM_NUMBER_OF_HANDS or self.number_of_hands > MAXIMUM_NUMBER_OF_HANDS:
-                    print(f"Number of hands must be between {MINIMUM_NUMBER_OF_HANDS} and {MAXIMUM_NUMBER_OF_HANDS}")
+                if (
+                    self.number_of_hands < NUMBER_OF_HANDS_MINIMUM
+                    or self.number_of_hands > NUMBER_OF_HANDS_MAXIMUM
+                ):
+                    print(
+                        f"Number of hands must be between {NUMBER_OF_HANDS_MINIMUM} and {NUMBER_OF_HANDS_MAXIMUM}"
+                    )
                     sys.exit(1)
                 i += 1  # Skip over the next argument, which is the number of hands (e.g., "10")
             elif argv[i] in ("-M", "--mimic"):
@@ -63,17 +75,39 @@ class Arguments:
         print("Options:")
         print("  --help                                   Show this help message")
         print("  --version                                Display the program version")
-        print("  -h, --number-of-hands <number of hands>  The number of hands to play in this simulation")
-        print("  -M, --mimic                              Use the mimic dealer player strategy")
-        print("  -B, --basic                              Use the basic player strategy")
-        print("  -N, --neural                             Use the neural player strategy")
-        print("  -L, --linear                             Use the linear regression player strategy")
-        print("  -P, --polynomial                         Use the polynomial regression player strategy")
-        print("  -H, --high-low                           Use the high-low count player strategy")
-        print("  -W, --wong                               Use the Wong count player strategy")
-        print("  -1, --single-deck                        Use a single deck of cards and rules")
-        print("  -2, --double-deck                        Use a double deck of cards and rules")
-        print("  -6, --six-shoe                           Use a six-deck shoe of cards and rules")
+        print(
+            "  -h, --number-of-hands <number of hands>  The number of hands to play in this simulation"
+        )
+        print(
+            "  -M, --mimic                              Use the mimic dealer player strategy"
+        )
+        print(
+            "  -B, --basic                              Use the basic player strategy"
+        )
+        print(
+            "  -N, --neural                             Use the neural player strategy"
+        )
+        print(
+            "  -L, --linear                             Use the linear regression player strategy"
+        )
+        print(
+            "  -P, --polynomial                         Use the polynomial regression player strategy"
+        )
+        print(
+            "  -H, --high-low                           Use the high-low count player strategy"
+        )
+        print(
+            "  -W, --wong                               Use the Wong count player strategy"
+        )
+        print(
+            "  -1, --single-deck                        Use a single deck of cards and rules"
+        )
+        print(
+            "  -2, --double-deck                        Use a double deck of cards and rules"
+        )
+        print(
+            "  -6, --six-shoe                           Use a six-deck shoe of cards and rules"
+        )
 
     def get_strategy(self):
         if self.mimic_flag:
@@ -103,4 +137,3 @@ class Arguments:
         if self.six_shoe_flag:
             return 6
         return 1
-

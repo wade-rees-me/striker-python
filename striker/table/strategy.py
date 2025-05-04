@@ -1,15 +1,16 @@
 import http.client
 import json
 from urllib.parse import urlparse
-from striker.constants import TRUE_COUNT_BET, TRUE_COUNT_MULTIPLIER
+from striker.constants import TRUE_COUNT_BET, TRUE_COUNT_MULTIPLIER, CHARTS_URL, unescape_json, strip_quotes
 from striker.cards import Card
 from .chart import Chart
+from .request import Request
 
 MAX_VALUES = 13
-MAX_ENTRIES = 22
-MAX_STRING_SIZE = 8
+#MAX_ENTRIES = 22
+#MAX_STRING_SIZE = 8
 
-class Strategy:
+class Strategy(Request):
     def __init__(self, decks, playbook, number_of_cards):
         self.request = {}
         self.Playbook = ""
@@ -25,8 +26,9 @@ class Strategy:
         self.number_of_cards = number_of_cards
 
         if playbook.lower() != "mimic":
-            self.fetch_json("http://localhost:57910/striker/v1/strategy")
-            self.fetch_table(decks, playbook)
+            url = f"http://{CHARTS_URL}/{decks}/{playbook}"
+            self.fetch_json(url)
+            self.fetch_table(self.json_response)
 
             self.SoftDouble.chart_print()
             self.HardDouble.chart_print()
@@ -35,42 +37,17 @@ class Strategy:
             self.HardStand.chart_print()
             self.count_print()
 
-    def fetch_json(self, url):
-        try:
-            parsed_url = urlparse(url)
-            conn = http.client.HTTPConnection(parsed_url.netloc)
-            conn.request("GET", parsed_url.path + ("?" + parsed_url.query if parsed_url.query else ""))
-            response = conn.getresponse()
-
-            if response.status < 200 or response.status >= 300:
-                raise RuntimeError(f"HTTP error: {response.status} {response.reason}")
-
-            response_data = response.read().decode("utf-8")
-            self.request['jsonResponse'] = json.loads(response_data)
-        except http.client.HTTPException as e:
-            print(f"Error fetching JSON: {e}")
-            exit(1)
-        except json.JSONDecodeError:
-            print("Error parsing JSON response")
-            exit(1)
-        finally:
-            conn.close()
-
-    def fetch_table(self, decks, playbook):
-        for item in self.request['jsonResponse']:
-            if item.get("playbook") == decks and item.get("hand") == playbook:
-                payload = json.loads(item.get("payload"))
-                self.Playbook = payload.get("playbook", "")
-                self.Insurance = payload.get("insurance", "")
-                self.Counts = payload.get("counts", [0] * MAX_VALUES)
-                self.Counts.insert(0, 0)
-                self.Counts.insert(0, 0)
-                self.load_table(payload.get("soft-double"), self.SoftDouble)
-                self.load_table(payload.get("hard-double"), self.HardDouble)
-                self.load_table(payload.get("pair-split"), self.PairSplit)
-                self.load_table(payload.get("soft-stand"), self.SoftStand)
-                self.load_table(payload.get("hard-stand"), self.HardStand)
-                break
+    def fetch_table(self, payload):
+        self.Playbook = payload.get("playbook", "")
+        self.Insurance = payload.get("insurance", "")
+        self.Counts = payload.get("counts", [0] * MAX_VALUES)
+        self.Counts.insert(0, 0)
+        self.Counts.insert(0, 0)
+        self.load_table(payload.get("soft-double"), self.SoftDouble)
+        self.load_table(payload.get("hard-double"), self.HardDouble)
+        self.load_table(payload.get("pair-split"), self.PairSplit)
+        self.load_table(payload.get("soft-stand"), self.SoftStand)
+        self.load_table(payload.get("hard-stand"), self.HardStand)
 
     def load_table(self, data, chart):
         if data is not None:
