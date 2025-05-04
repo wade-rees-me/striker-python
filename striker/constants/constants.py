@@ -1,10 +1,14 @@
 import os
 import json
+import socket
+import requests
+
 
 # General constants
 STRIKER_WHO_AM_I = "striker-python"
 STRIKER_VERSION = "v3.00.00"
 TIME_LAYOUT = "%Y-%m-%d %H:%M:%S %z"  # Python uses strftime format, similar to Go's
+MY_HOSTNAME = "Striker"
 
 #
 NUMBER_OF_CARDS_IN_DECK = 52
@@ -38,6 +42,16 @@ TRUE_COUNT_MULTIPLIER = 26
 RULES_URL = os.getenv("STRIKER_URL_RULES")
 CHARTS_URL = os.getenv("STRIKER_URL_CHARTS")
 SIMULATIONS_URL = os.getenv("STRIKER_URL_SIMULATIONS")
+
+
+def is_my_computer():
+    try:
+        hostname = socket.gethostname()
+        my_hostname = MY_HOSTNAME
+        return hostname == my_hostname
+    except Exception as e:
+        print(f"Error getting hostname: {e}")
+        return False
 
 
 def read_json_file(filename):

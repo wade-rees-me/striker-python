@@ -2,6 +2,7 @@ import time
 import json
 import http.client
 from urllib.parse import urlparse
+from striker.constants import is_my_computer
 
 
 from striker.constants import (
@@ -117,6 +118,9 @@ class Report:
 
     # Insert the simulation results into the database.
     def insert_report(self):
+        if not is_my_computer():
+            print("    This code is restricted to running only on my computer.")
+            return
         if self.total_hands < NUMBER_OF_HANDS_DATABASE:
             print(
                 f"    Error: Not enough hands played {self.total_hands:,}. Minimum required is {NUMBER_OF_HANDS_DATABASE:,}"
