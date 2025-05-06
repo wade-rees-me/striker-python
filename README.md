@@ -49,7 +49,6 @@ The above runs a mimic strategy against a single deck using 100 million hands.
 | `--double-deck`     | Use double-deck game                 |
 | `--six-shoe`        | Use six-deck shoe                    |
 | `--number-of-hands` | Number of hands to simulate (int)    |
-| `--threads`         | Number of threads (optional, default: 1) |
 
 ## Simulation Output
 
@@ -80,15 +79,14 @@ make run-neural
 
 - Python 3.8+
 - `argparse` (standard library)
-- `concurrent.futures` for multithreading (standard library)
 
 ## Example
 
 ```bash
-python striker_python.py --high-low --six-shoe --number-of-hands 250000000 --threads 4
+python striker_python.py --high-low --six-shoe --number-of-hands 250000000
 ```
 
-This will simulate 250 million hands using the Hi-Lo strategy on a 6-deck shoe with 4 threads.
+This will simulate 250 million hands using the Hi-Lo strategy on a 6-deck shoe
 
 ---
 
