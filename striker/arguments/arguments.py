@@ -1,11 +1,16 @@
+import multiprocessing
 import sys
 from striker.constants.constants import (
     NUMBER_OF_HANDS_MAXIMUM,
     NUMBER_OF_HANDS_MINIMUM,
     NUMBER_OF_HANDS_DEFAULT,
+    NUMBER_OF_CORES_PHYSICAL,
+    NUMBER_OF_CORES_LOGICAL,
+    NUMBER_OF_CORES_DEFAULT,
     STRIKER_WHO_AM_I,
     STRIKER_VERSION,
 )
+from striker.shared.shared_value import SharedValue
 
 
 #
@@ -21,21 +26,33 @@ class Arguments:
         self.single_deck_flag = False
         self.double_deck_flag = False
         self.six_shoe_flag = False
-        self.number_of_hands = NUMBER_OF_HANDS_DEFAULT
+        self.number_of_hands = SharedValue("i", NUMBER_OF_HANDS_DEFAULT)
+        self.number_of_threads = SharedValue("i", NUMBER_OF_CORES_DEFAULT)
 
         i = 1  # Start from the first argument after the program name
         while i < len(argv):
             if argv[i] in ("-h", "--number-of-hands") and i + 1 < len(argv):
-                self.number_of_hands = int(argv[i + 1])
+                self.number_of_hands.set(int(argv[i + 1]))
                 if (
-                    self.number_of_hands < NUMBER_OF_HANDS_MINIMUM
-                    or self.number_of_hands > NUMBER_OF_HANDS_MAXIMUM
+                    self.number_of_hands.get() < NUMBER_OF_HANDS_MINIMUM
+                    or self.number_of_hands.get() > NUMBER_OF_HANDS_MAXIMUM
                 ):
                     print(
                         f"Number of hands must be between {NUMBER_OF_HANDS_MINIMUM} and {NUMBER_OF_HANDS_MAXIMUM}"
                     )
                     sys.exit(1)
                 i += 1  # Skip over the next argument, which is the number of hands (e.g., "10")
+            elif argv[i] in ("-t", "--number-of-threads") and i + 1 < len(argv):
+                self.number_of_threads.set(int(argv[i + 1]))
+                if (
+                    self.number_of_threads.get() < 1
+                    or self.number_of_threads.get() > NUMBER_OF_CORES_LOGICAL
+                ):
+                    print(
+                        f"Number of threads must be between {1} and {NUMBER_OF_CORES_LOGICAL}"
+                    )
+                    sys.exit(1)
+                i += 1
             elif argv[i] in ("-M", "--mimic"):
                 self.mimic_flag = True
             elif argv[i] in ("-B", "--basic"):
@@ -73,40 +90,43 @@ class Arguments:
     def print_help_message(self):
         print("Usage: strikerPython [options]")
         print("Options:")
-        print("  --help                                   Show this help message")
-        print("  --version                                Display the program version")
+        print("  --help                                    Show this help message")
+        print("  --version                                 Display the program version")
         print(
-            "  -h, --number-of-hands <number of hands>  The number of hands to play in this simulation"
+            "  -h, --number-of-hands <number of hands>     The number of hands to play in this simulation"
         )
         print(
-            "  -M, --mimic                              Use the mimic dealer player strategy"
+            "  -t, --number-of-threads <number of threads> The number of hands to play in this simulation"
         )
         print(
-            "  -B, --basic                              Use the basic player strategy"
+            "  -M, --mimic                                 Use the mimic dealer player strategy"
         )
         print(
-            "  -N, --neural                             Use the neural player strategy"
+            "  -B, --basic                                 Use the basic player strategy"
         )
         print(
-            "  -L, --linear                             Use the linear regression player strategy"
+            "  -N, --neural                                Use the neural player strategy"
         )
         print(
-            "  -P, --polynomial                         Use the polynomial regression player strategy"
+            "  -L, --linear                                Use the linear regression player strategy"
         )
         print(
-            "  -H, --high-low                           Use the high-low count player strategy"
+            "  -P, --polynomial                            Use the polynomial regression player strategy"
         )
         print(
-            "  -W, --wong                               Use the Wong count player strategy"
+            "  -H, --high-low                              Use the high-low count player strategy"
         )
         print(
-            "  -1, --single-deck                        Use a single deck of cards and rules"
+            "  -W, --wong                                  Use the Wong count player strategy"
         )
         print(
-            "  -2, --double-deck                        Use a double deck of cards and rules"
+            "  -1, --single-deck                           Use a single deck of cards and rules"
         )
         print(
-            "  -6, --six-shoe                           Use a six-deck shoe of cards and rules"
+            "  -2, --double-deck                           Use a double deck of cards and rules"
+        )
+        print(
+            "  -6, --six-shoe                              Use a six-deck shoe of cards and rules"
         )
 
     def get_strategy(self):
