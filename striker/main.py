@@ -4,11 +4,15 @@ import multiprocessing
 import os
 import psutil
 import time
+from datetime import datetime
 from striker.arguments import Arguments, Parameters, Report
 from striker.table import Rules, Strategy
 from striker.constants import STRIKER_WHO_AM_I
 from striker.simulator import Simulator
 from striker.shared import SharedValue
+
+# import striker.xlog
+from striker.xlog import init_syslog, log_info, log_error, log_fatal, close_syslog
 
 
 def main():
@@ -18,6 +22,14 @@ def main():
     rules = Rules(arguments.get_decks())
     strategy = Strategy(arguments)
     finalReport = Report()
+
+    if init_syslog():
+        log_info("Simulation started at %s", datetime.now())
+        log_error("Deck shuffle failed at %s", datetime.now())
+        log_fatal("Fatal error: crash at %s", datetime.now())
+        close_syslog()
+    else:
+        print("Could not initialize xlog")
 
     finalReport.init_report(parameters)
     print(
