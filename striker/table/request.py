@@ -1,6 +1,7 @@
 import http.client
 import json
 from urllib.parse import urlparse
+from striker.constants import unescape_json, strip_quotes
 
 class Request:
     def __init__(self):
@@ -11,7 +12,7 @@ class Request:
         try:
             # Parse the URL
             parsed_url = urlparse(url)
-            conn = http.client.HTTPSConnection(parsed_url.netloc)
+            conn = http.client.HTTPConnection(parsed_url.netloc)
 
             # Make the GET request
             conn.request("GET", parsed_url.path + ("?" + parsed_url.query if parsed_url.query else ""))
@@ -24,6 +25,8 @@ class Request:
 
             # Read the response data
             self.response_string = response.read().decode("utf-8")
+            self.response_string = unescape_json(self.response_string)
+            self.response_string = strip_quotes(self.response_string)
 
             # Parse the JSON response
             self.json_response = json.loads(self.response_string)
