@@ -1,9 +1,10 @@
 import http.client
 import json
 from urllib.parse import urlparse
-from striker.constants import RULES_URL
+from striker.constants import RULES_URL, unescape_json, strip_quotes
+from .request import Request
 
-class Rules:
+class Rules(Request):
     def __init__(self, decks):
         self.playbook = ""
         self.hit_soft_17 = True
@@ -18,51 +19,30 @@ class Rules:
 
         try:
             url = f"http://{RULES_URL}/{decks}"
-            self.rules_fetch_table(url)
+            self.fetch_json(url)
+            self.fetch_table(self.json_response)
         except Exception as e:
             print(f"Error fetching rules table: {e}")
             exit(1)
 
-    def rules_fetch_table(self, url):
+    def fetch_table(self, json_data):
         try:
-            # Parse the URL
-            parsed_url = urlparse(url)
-            conn = http.client.HTTPConnection(parsed_url.netloc)
-
-            # Make the GET request
-            conn.request("GET", parsed_url.path + ("?" + parsed_url.query if parsed_url.query else ""))
-            response = conn.getresponse()
-
-            # Check for HTTP errors
-            if response.status < 200 or response.status >= 300:
-                raise RuntimeError(f"HTTP error: {response.status} {response.reason}")
-
-            # Read the response data
-            response_data = response.read().decode("utf-8")
-
-            # Parse the JSON data
-            json_data = json.loads(response_data)
-            payload = json_data.get("payload")
-            json_payload = json.loads(payload)
-
             # Extract rule values from the JSON
-            self.playbook = json_payload["playbook"]
-            self.hit_soft_17 = json_payload["hitSoft17"]
-            self.surrender = json_payload["surrender"]
-            self.double_any_two_cards = json_payload["doubleAnyTwoCards"]
-            self.double_after_split = json_payload["doubleAfterSplit"]
-            self.resplit_aces = json_payload["resplitAces"]
-            self.hit_split_aces = json_payload["hitSplitAces"]
-            self.blackjack_bets = json_payload["blackjackBets"]
-            self.blackjack_pays = json_payload["blackjackPays"]
-            self.penetration = json_payload["penetration"]
+            self.playbook = json_data["playbook"]
+            self.hit_soft_17 = json_data["hitSoft17"]
+            self.surrender = json_data["surrender"]
+            self.double_any_two_cards = json_data["doubleAnyTwoCards"]
+            self.double_after_split = json_data["doubleAfterSplit"]
+            self.resplit_aces = json_data["resplitAces"]
+            self.hit_split_aces = json_data["hitSplitAces"]
+            self.blackjack_bets = json_data["blackjackBets"]
+            self.blackjack_pays = json_data["blackjackPays"]
+            self.penetration = json_data["penetration"]
 
         except http.client.HTTPException as e:
             raise RuntimeError(f"HTTP request failed: {e}")
         except json.JSONDecodeError:
             raise RuntimeError("Error parsing JSON response")
-        finally:
-            conn.close()
 
     def print(self):
         print(f"    {'Table Rules':<24}")
